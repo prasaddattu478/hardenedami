@@ -1,0 +1,29 @@
+---
+# ----------------------------------------------------------------------------
+# Manage the "Ansible" user 'euler'
+# ----------------------------------------------------------------------------
+
+- name: Make sure devops users are in sud
+  lineinfile:
+    dest: /etc/sudoers
+    line: '%devops ALL=(ALL) NOPASSWD: ALL'
+    state: present
+
+- name: ensure ansible 'devops' group exists
+  group: name=devops system=yes  state=present
+
+- name: ensure ansible user 'euler' group exists
+  group: name=euler system=yes  state=present
+
+- name: ensure ansible user 'euler' exists
+  user: name=euler createhome=yes comment="Ansible user" system=yes
+        update_password=always state=present group=euler groups=devops
+        shell=/bin/bash state=present
+
+- name: ensure users ssh directory
+  file: name=/home/euler/.ssh state=directory
+        owner=euler group=euler mode=0700
+
+- name: ensure users authorized_keys file
+  copy: src=roles/accounts/files/public_keys/euler dest=/home/euler/.ssh/authorized_keys
+        owner=euler group=euler mode=0600

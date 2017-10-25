@@ -1,0 +1,33 @@
+
+#
+# AWS AMI launch vars.
+#
+
+aws_ec2_keyname: "Shared Services"
+aws_ec2_instance_type: t2.large
+aws_ec2_ami_name: "centos7.v2.hardened.{{ date.year }}{{ date.month }}{{ date.day }}.b{{ build_number | default(0099) }}.{{ 999999 |random}}"
+aws_ec2_ami_description: "Hardened;v2;Encrypted Root EBS"
+aws_ec2_base_community_ami_id: "ami-0c2aba6c"
+aws_ec2_instance_profile: "hardenimage"
+aws_vpc_subnet_id: subnet-2313c954
+aws_ec2_sg:
+  - sg-4fb75836
+  - sg-51dde834
+aws_ec2_ami_tags:
+  Name: CentOS 7 Hardened Baseline V2
+  OS_Version: CentOS
+  Release: 7
+  Use: hardened_baseline
+aws_ec2_ami_launch_tags: "{{ aws_ec2_ami_tags }}"
+aws_ec2_ami_keep_last: 2
+aws_ec2_tags:
+  Name: AMI Build CentOS 7 v2 Hardened Baseline
+  State: Manual
+  Team: Infra
+aws_region: us-west-2
+
+#
+# AMI configure vars.
+#
+
+sshconfiguser: euler

@@ -1,0 +1,10 @@
+---
+# ----------------------------------------------------------------------------
+# defaults file for selinux
+# ----------------------------------------------------------------------------
+selinux_mode: 'enforcing'
+selinux_policy_type: 'targeted'
+selinux_custom_policy_dir: /var/lib/selinux
+selinux_supporting_packages:
+    - libsemanage-python
+    - policycoreutils-python

@@ -1,0 +1,22 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for journald
+# ----------------------------------------------------------------------------
+
+- name: deploy journal logging unit file
+  template: src=journald-logger.service.j2 dest=/etc/systemd/system/journald-logger.service
+            owner=root group=root mode=0644
+  register: journald_logger
+
+- debug: msg="{{ journald_logger }}"
+
+- name: deploy cron job to restart logger daily
+  template: src=journald-logger.cron.j2 dest=/etc/cron.d/journald-logger.cron
+            owner=root group=root mode=0640
+
+- name: ensure systemd is updated if new unit files
+  command: systemctl daemon-reload
+  when: journald_logger|changed
+
+- name: ensure journal logger service is running
+  service: name=journald-logger.service state=running enabled=yes

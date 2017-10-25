@@ -1,0 +1,76 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for clamav
+# ----------------------------------------------------------------------------
+
+- name: ensure clamav group
+  group: name={{ clamav_group }} system=yes state=present
+
+- name: ensure clamav user
+  user: name={{ clamav_user }} system=yes state=present
+        home={{ clamav_user_home }} group={{ clamav_group }}
+        comment="Clam AntiVirus" shell={{ clamav_user_shell }}
+
+- name: install clamav packages
+  yum: name={{ item }} state=installed
+  with_items: "{{ clamav_packages_list }}"
+
+- name: ensure SELinux anti-virus booleans are enabled
+  seboolean: name={{ item }} state=yes persistent=yes
+  with_items: "{{ clamav_selinux_booleans }}"
+
+- name: deploy clamav SELinux policy
+  copy: src=clamav_selinux_policy.te dest={{ selinux_custom_policy_dir }}/clamav.te
+        owner=root group=root mode=0640
+  register: clamav_selinux_policy
+
+- name: compile clamav selinux policy mod
+  command: checkmodule -M -m -o {{ selinux_custom_policy_dir }}/clamav.mod {{ selinux_custom_policy_dir }}/clamav.te
+  when: clamav_selinux_policy|changed
+
+- name: build semodule package for clamav SELinux policy
+  command: semodule_package -m {{ selinux_custom_policy_dir }}/clamav.mod -o {{ selinux_custom_policy_dir }}/clamav.pp
+  when: clamav_selinux_policy|changed
+
+- name: install clamav SELinux policy
+  command: semodule -i {{ selinux_custom_policy_dir }}/clamav.pp
+  when: clamav_selinux_policy|changed
+
+- name: ensure clamav user owns clamav home
+  file: path={{ clamav_user_home }} state=directory
+        owner={{ clamav_user }} group={{ clamav_group }}
+
+- name: ensure clamd configuration directory structure
+  file: path={{ clamav_clamd_conf_dir }} state=directory
+        owner={{ clamav_user }} group={{ clamav_group }} mode=0750
+
+- name: ensure freshclam configuration
+  template: src=freshclam.conf.j2 dest={{ clamav_freshclam_conf }}
+            owner={{ clamav_user }} group={{ clamav_group }} mode=0644
+
+- name: ensure clamd configuration
+  template: src=clamd.conf.j2 dest={{ clamav_clamd_conf }}
+            owner={{ clamav_user }} group={{ clamav_group }} mode=0644
+
+- name: deploy systemd unit file for freshclam
+  template: src=systemd.freshclam.j2 dest="{{ systemd_override_dir }}/freshclam.service"
+            owner=root group=root mode=0644
+  register: freshclam_systemd
+
+- name: deploy systemd unit file for clamd
+  template: src=systemd.clamd.j2 dest="{{ systemd_override_dir }}/clamd.service"
+            owner=root group=root mode=0644
+  register: clamd_systemd
+
+- name: reload systemd unit files
+  command: systemctl daemon-reload
+  when: clamd_systemd|changed or freshclam_systemd|changed
+
+- name: ensure freshclam cron does not exist
+  file: path=/etc/cron.d/clamav-update state=absent
+
+- name: ensure clamav server is running
+  service: name=clamd.service state=running enabled=yes
+
+- name: ensure freshclam daemon is running
+  service: name=freshclam.service state=running enabled=yes

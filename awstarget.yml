@@ -1,0 +1,102 @@
+---
+# ----------------------------------------------------------------------------
+# Create and configure AWS AMI.
+# ----------------------------------------------------------------------------
+
+- name: launch new ec2 instance based base centos AMI
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+      - "group_vars/aws.yml"
+  pre_tasks:
+      - debug: msg="##teamcity[progressMessage 'launching new EC2 instance']"
+  tasks:
+
+      - name: launching new ec2 instance(s)
+        ec2: 
+          count: "{{ aws_ec2_instance_count | default(1) }}"
+          group_id: "{{ aws_ec2_sg }}"
+          image: "{{ aws_ec2_base_community_ami_id }}"
+          instance_profile_name: "{{ aws_ec2_instance_profile | default('ec2.linux.default') }}"
+          key_name: "{{ aws_ec2_keyname }}"
+          instance_type: "{{ aws_ec2_instance_type | default('t2.micro') }}"
+          region: "{{ aws_region | default('us-west-2') }}"
+          vpc_subnet_id: "{{ aws_vpc_subnet_id }}"
+          instance_tags: "{{ aws_ec2_tags }}"
+          user_data: "{{ lookup('file', 'files/aws_ami_creation_user_data') }}"
+          wait: yes
+          state: present
+        register: aws_ec2
+ 
+      - name: register new instance with hostgroup
+        add_host: 
+          hostname: "{{ item.private_ip }}"
+          groupname: hoststargets
+        with_items: "{{ aws_ec2.instances }}"
+
+      - name: pause one minute to allow user data to disable SSH
+        pause: minutes=1
+
+      - name: wait for instance to become available
+        wait_for: 
+          host: "{{ item.private_ip }}"
+          port: 22 
+          delay: 60 
+          timeout: 300
+          search_regex: OpenSSH
+          state: started
+        with_items: "{{ aws_ec2.instances }}"
+
+#
+# Configure created AMI.
+#
+
+- include: configuretarget.yml sshconfiguser=euler targetenv=aws
+
+#
+# Capture AMI image.
+#
+
+- name: build new AMI from baseline
+  hosts: localhost
+  gather_facts: True
+  connection: localhost
+  vars_files:
+      - "group_vars/aws.yml"
+  pre_tasks:
+      - debug: msg="##teamcity[progressMessage 'Building AMI']"
+  tasks:
+      - debug: msg="building new AMI {{ aws_ec2_ami_name }} from instance {{  aws_ec2.instance_ids[0] }}"
+
+      - name: build new AMI
+        ec2_ami: 
+          name: "{{ aws_ec2_ami_name }}"
+          description: "{{ aws_ec2_ami_description }}"
+          instance_id: "{{ aws_ec2.instance_ids[0] }}"
+          region: "{{ aws_region | default('us-west-2') }}"
+          tags: "{{ aws_ec2_ami_tags }}"
+          state: present
+          wait: yes
+        register: ec2_ami_build
+
+      - debug: msg="return for ami build {{ ec2_ami_build }}"
+
+#
+# Terminate AMI build image.
+#
+
+- name: terminate AMI Build ec2 instance
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+      - "group_vars/aws.yml"
+  pre_tasks:
+      - debug: msg="##teamcity[progressMessage 'Terminating AMI Build instance']"
+  tasks:
+      - name: terminating instance
+        ec2: 
+          state: absent
+          instance_ids: "{{ aws_ec2.instance_ids[0] }}"
+          region: "{{ aws_region | default('us-west-2') }}"
+
+

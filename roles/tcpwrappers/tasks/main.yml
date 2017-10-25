@@ -1,0 +1,17 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for tcpwrappers
+# Note: ensure that hosts.deny is deployed last.  Ansible uses SSH for
+#       communication.
+# ----------------------------------------------------------------------------
+
+- name: ensure tcpwrappers package is installed
+  yum: name=tcp_wrappers state=installed
+
+- name: deploy tcpwrappers host allowed template
+  template: src=hosts.allow.j2 dest=/etc/hosts.allow
+            owner=root group=root mode=0600
+
+- name: deploy tcpwrappers host denied template
+  template: src=hosts.deny.j2 dest=/etc/hosts.deny
+            owner=root group=root mode=0600

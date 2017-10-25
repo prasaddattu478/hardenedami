@@ -1,0 +1,20 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for auditd
+# ----------------------------------------------------------------------------
+
+- name: ensure auditd is installed
+  yum: name=audit state=installed
+
+- name: deploy auditd configuration
+  template: src=auditd.conf.j2 dest={{ auditd_conf_file }}
+            owner=root group=root mode=0600
+  register: auditd_conf
+
+- name: deploy auditd rules
+  template: src=dig.rules.j2 dest={{ auditd_rules_file }}
+            owner=root group=root mode=0600
+  register: autditd_rules
+
+- name: ensure the audit services is running
+  service: name=auditd.service state=running enabled=yes

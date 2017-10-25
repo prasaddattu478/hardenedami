@@ -1,0 +1,7 @@
+---
+# ----------------------------------------------------------------------------
+# defaults file for accounts
+# ----------------------------------------------------------------------------
+accounts_user_comment: "Created and maintained by Ansible"
+accounts_common_groups:
+    - devops

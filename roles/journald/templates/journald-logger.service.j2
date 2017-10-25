@@ -1,0 +1,18 @@
+# ----------------------------------------------------------------------------
+# JournalD logging service
+# {{ ansible_managed }}
+#
+# This service writes the journal to disk in JSON format so that it can be
+# by 3rd party tools that don't understand the binary format of the journal
+# ----------------------------------------------------------------------------
+[Unit]
+Description=JournalD Disk Logger
+After=network.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/journalctl --vacuum-size={{ journald_max_disk_size }}
+ExecStart=/bin/bash -c '/usr/bin/journalctl --no-tail -f -o json > {{ journald_log_file }}'
+
+[Install]
+WantedBy=multi-user.target

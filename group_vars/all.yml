@@ -1,0 +1,6 @@
+---
+systemd_override_dir: /etc/systemd/system
+date:
+  month: "{{ ansible_date_time.month }}"
+  day: "{{ ansible_date_time.day }}"
+  year: "{{ ansible_date_time.year }}"

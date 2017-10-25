@@ -1,0 +1,32 @@
+---
+
+- name: build new AMI from baseline
+  hosts: localhost
+  gather_facts: True
+  connection: localhost
+  vars_files:
+      - "group_vars/aws.yml"
+  tasks:
+      - debug: msg="Looking for AMIs with the tag set {{ aws_ec2_ami_tags }}"
+      
+      - name: find AMIs to cleanup
+        delegate_to: 127.0.0.1
+        ec2_ami_find: ami_tags={{ aws_ec2_ami_tags }}
+                      region={{ aws_region | default('us-west-2') }}
+                      sort=creationDate
+        register: ami_cleanup
+      
+      - debug: msg="Found the following AMIs set {{ ami_cleanup.results }}"
+      
+      - debug: msg="Keeping the last {{ aws_ec2_ami_keep_last }} AMIs"
+      
+      - debug: msg="Removing {{ ami_cleanup.results[:-aws_ec2_ami_keep_last] | length }}"
+        when: "{{ ami_cleanup.results | length }} > 0"
+      
+      - name: Deregister old AMIs
+        ec2_ami: state=absent
+                 region={{ aws_region | default('us-west-2') }}
+                 delete_snapshot=yes
+                 image_id={{ item.ami_id }}
+        when: "{{ ami_cleanup.results | length }} > 0"
+        with_items: "{{ ami_cleanup.results[:-aws_ec2_ami_keep_last ] }}"

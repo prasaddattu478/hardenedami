@@ -1,0 +1,40 @@
+# ----------------------------------------------------------------------------
+# default rsyslog configuration
+# {{ ansible_managed }}
+#
+# Notes: most logs should flow through systemd's journal.  ryslog will 
+#        most other logs and put them in /var/log/messages.
+# ----------------------------------------------------------------------------
+
+$umask 000
+
+# Modules
+# -------
+module(load="impstats" interval="600" resetCounters="on" format="json" log.syslog="off" log.file="/var/log/rsyslog-stats.log" )
+module(load="builtin:omfile" dirCreateMode="0750" fileCreateMode="0440" fileOwner="root" fileGroup="devops" dirOwner="root" dirGroup="devops")
+module(load="imuxsock")
+
+# Default message templates
+# ----------------------------------------------------------------------------
+template(name="msgdefault" type="list") {
+  property(name="timegenerated")  constant(value=" ")
+      property(name="hostname")  constant(value=" ")
+      constant(value="[") property(name="fromhost-ip") constant(value="] ")
+      property(name="pri-text") constant(value=" ")
+      property(name="syslogtag")
+      property(name="msg")
+      constant(value="\n")
+}
+
+
+# Dynamic templates
+template (name="messages" type="string" string="/var/log/messages.log")
+
+# include any custom configurations
+$includeconfig /etc/rsyslog.d/*.conf
+
+# send all messages to a single file for parsing
+*.* {
+  action( type="omfile" DynaFile="messages" Template="msgdefault" name="default")
+  stop
+}

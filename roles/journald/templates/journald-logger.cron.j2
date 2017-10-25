@@ -1,0 +1,3 @@
+# Restart journald logger to vaccum log
+# {{ ansible_managed }}
+0 3 * * * root /usr/bin/systemctl restart journald-logger.service

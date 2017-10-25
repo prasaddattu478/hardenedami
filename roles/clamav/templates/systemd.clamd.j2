@@ -1,0 +1,16 @@
+# ----------------------------------------------------------------------------
+# Clamd systemd unit file
+# {{ ansible_managed }}
+# ----------------------------------------------------------------------------
+[Unit]
+Description=ClamAV daemon
+After=syslog.target network.target
+
+[Service]
+ExecStartPre = /bin/rm -f {{ clamav_runtime_dir }}/clamd.sock
+ExecStart = /usr/sbin/clamd --config-file {{ clamav_clamd_conf }}
+Restart = on-failure
+PrivateTmp = true
+
+[Install]
+WantedBy=multi-user.target

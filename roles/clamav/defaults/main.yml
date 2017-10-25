@@ -1,0 +1,33 @@
+---
+# ----------------------------------------------------------------------------
+# defaults file for clamav
+# ----------------------------------------------------------------------------
+
+selinux_custom_policy_dir: /var/lib/selinux
+clamav_packages_list:
+    - clamav
+    - clamav-update
+    - clamav-server
+clamav_selinux_booleans:
+    - antivirus_can_scan_system
+    - antivirus_use_jit
+clamav_clamd_conf_dir: /etc/clamd.d 
+clamav_freshclam_conf: /etc/freshclam.conf
+clamav_clamd_conf: "{{ clamav_clamd_conf_dir }}/default.conf"
+clamav_group: clamav
+clamav_user: clamav
+clamav_user_home: /var/lib/clamav
+clamav_user_shell: /bin/false
+clamav_runtime_dir: /var/run
+clamav_exclude_path:
+    - '^/proc/'
+    - '^/sys/'
+    - '^/dev/'
+    - '^/boot/vmlinuz*'
+    - '^/var/log/'
+    - '^/etc/selinux/'
+    - '^/etc/shadow*'
+    - '^/etc/gshadow*'
+    - '^/etc/audit/'
+    - '/etc/security/opasswd'
+    - '/usr/share/mime/mime.cache'

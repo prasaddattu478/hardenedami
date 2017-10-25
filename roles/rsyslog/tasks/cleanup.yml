@@ -1,0 +1,14 @@
+---
+# ----------------------------------------------------------------------------
+# cleanup any existing logs on the system
+# ----------------------------------------------------------------------------
+
+- name: remove existing logs that might be on disk
+  command: rm -rf /var/log/{{ item }}*
+  with_items:
+    - "secure"
+    - "messages"
+    - "sshd"
+    - "cron"
+    - "maillog"
+    - "spooler"

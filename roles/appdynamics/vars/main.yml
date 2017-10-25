@@ -1,0 +1,6 @@
+---
+# vars file for appdynamics
+appdynamics_version: 4.3.1.0
+unzip_package: 'unzip'
+npm_package: 'npm'
+appdynamics_nodeagent_version: 4.3.1

@@ -1,0 +1,23 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for rsyslog
+# ----------------------------------------------------------------------------
+
+- name: ensure rsyslog repository configured
+  template: src=rsyslog.yum.repo.j2 dest=/etc/yum.repos.d/rsyslog.repo
+            owner=root group=root mode=0644
+
+- name: ensure the latest version of rsyslog is installed
+  yum: name={{ item }} state=latest
+  with_items: "{{ rsyslog_package_list }}"
+  register: rsyslog_install
+
+- name: deploy rsyslog configuration
+  template: src=rsyslog.conf.j2 dest=/etc/rsyslog.conf
+
+- name: restart rsyslog service
+  service: name=rsyslog.service state=stopped
+  when: rsyslog_install|changed
+
+- name: ensure rsyslog is running
+  service: name=rsyslog.service state=restarted enabled=yes

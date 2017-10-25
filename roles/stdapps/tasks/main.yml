@@ -1,0 +1,35 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for stdapps
+# ----------------------------------------------------------------------------
+
+- name: install epel-release package
+  yum: name=epel-release
+  
+- name: update yum cache to pull in epel package cache
+  yum: name=* state=latest update_cache=yes
+
+- name: ensure standard applications are available
+  yum: name={{ item }}
+  with_items: "{{ yum_whitelisted_list }}"
+
+- name: upgrade pip
+  shell: pip install --upgrade pip
+
+- name : install python packages package.
+  pip: name={{ item }}
+  with_items: "{{ python_package_list }}"
+
+- name: ensure blacklisted services are not running
+  service: name={{ item }} state=stopped enabled=no
+  with_items: "{{ yum_blacklisted_list }}"
+  ignore_errors: True
+
+- name: ensure blacklisted applications are not installed
+  yum: name={{ item }} state=absent
+  with_items: "{{ yum_blacklisted_list }}"
+
+- name: ensure trusted binaries are locked down
+  file: name={{ item.binary }} owner=root group={{ item.group }} mode={{ item.mode }}
+  with_items: "{{ stdapps_trusted_binaries }}"
+

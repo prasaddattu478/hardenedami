@@ -1,0 +1,17 @@
+---
+# ----------------------------------------------------------------------------
+# defaults file for auditd
+# ----------------------------------------------------------------------------
+auditd_conf_file: /etc/audit/auditd.conf
+auditd_rules_file: /etc/audit/rules.d/audit.rules
+auditd_log_file: /var/log/audit/audit.log
+auditd_num_logs: 10
+auditd_name_format: hostname
+auditd_max_log_size: 25
+auditd_max_log_action: rotate
+auditd_space_left: 75
+auditd_space_left_action: SUSPEND
+auditd_admin_space_left: 50
+auditd_admin_space_left_action: SUSPEND
+auditd_disk_full_action: SUSPEND
+auditd_disk_error_action: SUSPEND

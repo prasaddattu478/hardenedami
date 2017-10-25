@@ -1,0 +1,16 @@
+# ----------------------------------------------------------------------------
+# SSHD Key Gen Unit File
+# {{ ansible_managed }}
+# ----------------------------------------------------------------------------
+[Unit]
+Description=OpenSSH Server Key Generation
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key
+ConditionPathExists=|!{{ ssh_config_dir }}/{{ ssh_security_pki_keyname }}
+PartOf=sshd.service sshd.socket
+
+[Service]
+ExecStart=/usr/bin/ssh-keygen -t rsa -b {{ ssh_security_pki_keybits }} -f {{ ssh_config_dir }}/{{ ssh_security_pki_keyname }} -N '' -C 'OpenSSH Server'
+Type=oneshot
+RemainAfterExit=yes

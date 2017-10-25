@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------
+# Clamd configuration
+# {{ ansible_managed }}
+#
+# see clamd.conf(5) for configuration information
+# ----------------------------------------------------------------------------
+
+PidFile {{ clamav_runtime_dir }}/clamd.pid
+LocalSocket {{ clamav_runtime_dir }}/clamd.sock
+LocalSocketGroup {{ clamav_group }}
+FixStaleSocket yes
+LogSyslog yes
+ExtendedDetectionInfo yes
+
+{% for ep in clamav_exclude_path -%}
+ExcludePath {{ ep }}
+{% endfor -%}
+
+User root
+CrossFilesystems yes
+Foreground no
+DetectPUA yes
+AlgorithmicDetection yes
+ScanOnAccess yes
+OnAccessMountPath /
+OnAccessIncludePath /home
+OnAccessIncludePath /bin
+OnAccessIncludePath /usr/bin
+OnAccessIncludePath /usr/sbin
+OnAccessIncludePath /sbin
+OnAccessIncludePath /usr/local

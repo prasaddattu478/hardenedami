@@ -1,0 +1,66 @@
+# ----------------------------------------------------------------------------
+# OpenSSH server configuration
+# {{ ansible_managed }}
+# ----------------------------------------------------------------------------
+
+# Server Settings
+# ---------------
+Port 22
+Protocol 2
+AddressFamily inet
+HostKey {{ ssh_config_dir }}/{{ ssh_security_pki_keyname }}
+ServerKeyBits {{ ssh_security_pki_keybits }}
+
+# Logging Configuration
+# ---------------------
+SyslogFacility AUTH
+LogLevel {{ ssh_logging_loglevel }}
+
+# Subsystem modules
+# -----------------
+Subsystem sftp /usr/libexec/openssh/sftp-server
+
+# General Settings
+# ----------------
+Banner /etc/ssh/banner
+PrintMotd yes
+PrintLastLog yes
+Compression delayed
+AllowTcpForwarding no
+ClientAliveInterval 15
+ClientAliveCountMax 3
+GatewayPorts no
+TCPKeepAlive no
+UseDNS no
+MaxSessions 10
+
+# Authentication Modules
+# ----------------------
+GSSAPIAuthentication no
+KerberosAuthentication no
+RhostsRSAAuthentication no
+HostbasedAuthentication no
+ChallengeResponseAuthentication no
+PubkeyAuthentication yes
+PasswordAuthentication no
+PermitEmptyPasswords no
+AllowGroups {{ ssh_security_allowed_groups }}
+LoginGraceTime 20s
+MaxStartups 10
+PermitRootLogin no
+IgnoreRhosts yes
+StrictModes yes
+MACs {{ ssh_security_allowed_hmacs }}
+MaxAuthTries 6
+PermitUserEnvironment no
+PermitTunnel no
+UseLogin no
+UsePAM yes
+UsePrivilegeSeparation yes
+Ciphers {{ ssh_security_allowed_ciphers }}
+
+# X11 Forwarding
+# --------------
+X11DisplayOffset 10
+X11Forwarding no
+X11UseLocalhost yes

@@ -1,0 +1,31 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for selinux
+# ----------------------------------------------------------------------------
+
+- name: get current selinux mode
+  shell: sestatus | grep 'SELinux status' | awk '{ print $3 }'
+  changed_when: False
+  register: selinux_current_mode
+
+- name: ensure SELinux mode is correct
+  selinux: state={{ selinux_mode }} policy={{ selinux_policy_type }}
+  register: selinux
+
+- name: ensure filesystem will be relabeled
+  file: path=/.autorelabel state=touch
+  when: selinux|changed and selinux_current_mode.stdout == 'disabled'
+  register: selinux_relabel
+
+- name: ensure a system reboot
+  fail: msg="The system needs to be rebooted before continuing due to a SELinux mode change.
+             If a filesystem relabel is not necessary, please rerun this playbook without a reboot."
+  when: selinux_relabel|changed
+
+- name: ensure SELinux support packages are installed
+  yum: name={{ item }} state=installed
+  with_items: "{{ selinux_supporting_packages }}"
+
+- name: ensure SELinux custom policy directory exists
+  file: path={{ selinux_custom_policy_dir }} state=directory
+        owner=root group=root

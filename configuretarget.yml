@@ -1,0 +1,29 @@
+---
+# ----------------------------------------------------------------------------
+# Update hardened linux baseline and create a new AMI
+# ----------------------------------------------------------------------------
+
+- name: update instance with latest
+  hosts: hoststargets
+  remote_user: "{{ sshconfiguser }}"
+  become: True
+  become_user: root
+  gather_facts: True
+  pre_tasks:
+      - name: ensure all packages are up to date
+        yum: name=* state=latest update_cache=yes
+  roles:
+    - selinux
+    - ntp
+    - accounts
+    - stdapps
+    - auditd
+    - rsyslog
+    - journald
+    - clamav
+    - tcpwrappers
+    - openssh
+    - appdynamics
+  post_tasks:
+      - include: roles/openssh/tasks/cleanup.yml
+      - include: roles/rsyslog/tasks/cleanup.yml

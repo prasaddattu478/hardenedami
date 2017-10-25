@@ -1,0 +1,30 @@
+---
+# ----------------------------------------------------------------------------
+# defaults file for stdapps
+# ----------------------------------------------------------------------------
+tbgroup: "{{ common_devops_group | default('devops') }}"
+yum_whitelisted_list:
+    - vim-enhanced
+    - screen
+    - tmux
+    - htop
+    - bind-utils
+    - traceroute
+    - mailx
+    - lsof
+    - wget
+    - python-pip
+python_package_list:
+    - boto3
+    - requests
+yum_blacklisted_list:
+    - chrony
+    - wpa_supplicant
+    - firewalld
+stdapps_trusted_binaries: 
+    - { "binary": "/usr/bin/traceroute", 
+        "group": "{{ tbgroup }}", "mode": "0700" }
+    - { "binary": "/bin/dig", 
+        "group": "{{ tbgroup }}", "mode": "0700" }
+    - { "binary": "/usr/bin/ldd", 
+        "group": "{{ tbgroup }}", "mode": "0100" }

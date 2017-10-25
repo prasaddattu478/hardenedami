@@ -1,0 +1,16 @@
+# ----------------------------------------------------------------------------
+# Fresclam systemd unit-file
+# Ansible managed
+# ----------------------------------------------------------------------------
+[Unit]
+Description=Freshclam virus definition updater
+After=network.target
+Requires=clamd.service
+
+[Service]
+ExecStart = /usr/bin/freshclam --config-file /etc/freshclam.conf --daemon
+Restart = on-failure
+PrivateTmp = true
+
+[Install]
+WantedBy=multi-user.target

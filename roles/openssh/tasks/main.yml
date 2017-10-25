@@ -1,0 +1,22 @@
+---
+# ----------------------------------------------------------------------------
+# OpenSSH tasks and configuration
+# ----------------------------------------------------------------------------
+
+- name: ensure OpenSSH server is installed and the latest version
+  yum: name={{ openssh_package }} state=latest
+
+- name: deploy OpenSSH server configuration
+  template: src=sshd_config.j2 dest={{ ssh_config_dir }}/sshd_config
+            owner=root group=root mode=0600
+  when: targetenv != "local"
+
+- name: ensure correct ssh welcome banner
+  template: src=ssh_banner.j2 dest={{ ssh_config_dir }}/banner
+            owner=root group=root mode=0644
+
+- name: ensure OpenSSH server is enabled on boot
+  service: name=sshd.service state=reloaded enabled=yes
+
+- name: update OpenSSH key generation systemd unit file
+  template: src=sshd-keygen.service.j2 dest=/etc/systemd/system/sshd-keygen.service

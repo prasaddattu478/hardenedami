@@ -1,0 +1,64 @@
+---
+# ----------------------------------------------------------------------------
+# tasks file for Appdynamics
+# ----------------------------------------------------------------------------
+
+- name: install unzip package
+  yum: name={{ unzip_package }} state=latest
+
+- name: Setup the directory structure java app agent
+  command: sudo mkdir -p /opt/appdynamics/appagent
+
+- name: Setup the directory structure machine agent
+  command: sudo mkdir -p /opt/appdynamics/machine-agent
+
+- name: Download App server agent artifacts from authorized S3 location
+  command: aws s3 cp s3://prov-installs/AppDynamics/JavaAppServerAgent-{{ appdynamics_version }}.zip /tmp
+
+- name: Download machinne agent artifacts from authorized S3 location
+  command: aws s3 cp s3://prov-installs/AppDynamics/machineagent-bundle-64bit-linux-{{ appdynamics_version }}.zip /tmp
+
+- name: Unzip Appserveragent files
+  command: sudo unzip /tmp/JavaAppServerAgent-{{ appdynamics_version }}.zip -d /opt/appdynamics/appagent
+
+- name: Unzip Appserveragent files
+  command: sudo unzip /tmp/machineagent-bundle-64bit-linux-{{ appdynamics_version }}.zip -d /opt/appdynamics/machine-agent
+
+- name: install npm(node package manager) application for node.js
+  yum: name={{ npm_package }} state=latest
+
+- name: npm install for appdynamics agent
+  command: npm install appdynamics@{{ appdynamics_nodeagent_version }}
+
+- name: ensure appdynamics user 'appd' group exists
+  group: name=appd system=yes  state=present
+
+- name: Ensure appdynamics user "appd" exists
+  user: name=appd createhome=yes comment="appdynamics user" system=yes  update_password=always state=present group=appd  shell=/bin/bash state=present
+
+- name: Make sure "appd" user is a sudouser
+  lineinfile:
+    dest: /etc/sudoers
+    line: '%appd ALL=(ALL) NOPASSWD: ALL'
+    state: present
+
+- name: set /opt/appdynamics owner as appd
+  command: chown -R appd:appd /opt/appdynamics
+
+- name: Ensure appd user has access to /home/appd home directory
+  command: chown -R appd:appd /home/appd
+
+- name: Ensure appd machine agent restarts after crash
+  lineinfile:
+    dest: /opt/appdynamics/machine-agent/etc/systemd/system/appdynamics-machine-agent.service
+    insertbefore: "[Service]"
+    regexp: '# chown command to give the desired user ownership of the MACHINE_AGENT_HOME directory.'
+    backrefs: yes
+    state: present
+    line: |
+      #Below lines are added to restart appd machine agent in case of crash
+      Restart=always
+      RestartSec=3
+
+- name: create a soft link
+  command: cp /opt/appdynamics/machine-agent/etc/systemd/system/appdynamics-machine-agent.service /etc/systemd/system

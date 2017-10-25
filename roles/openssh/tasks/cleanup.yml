@@ -1,0 +1,9 @@
+---
+# ----------------------------------------------------------------------------
+# Delete built in AWS key used during AMI creation.
+# ----------------------------------------------------------------------------
+
+- name: Clean artifact path
+  file:
+    state: absent
+    path: '/home/centos/.ssh/authorized_keys'

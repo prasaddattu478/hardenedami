@@ -1,0 +1,14 @@
+
+module clamav 1.0;
+
+require {
+         type antivirus_t;
+         type semanage_store_t;
+         type var_run_t;
+         class sock_file { write create unlink setattr };
+         class lnk_file getattr;
+}
+
+#============= antivirus_t ==============
+allow antivirus_t semanage_store_t:lnk_file getattr;
+allow antivirus_t var_run_t:sock_file { write create unlink setattr };
